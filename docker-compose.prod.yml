@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres
+    container_name: tms-db-test
+    env_file:
+      - .env
+    ports:
+      - 5432:5432
+    volumes:
+      - pg-volume-test:/var/lib/postgresql
+    networks:
+      - tms-prac-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile.prod
+    container_name: tms-app-test
+    networks:
+      - tms-prac-net
+    env_file:
+      - .env
+    ports:
+      - 3000:3000
+    depends_on:
+      db:
+        condition: service_healthy
+
+networks:
+  tms-prac-net:
+    driver: bridge
+
+volumes:
+  pg-volume-test:

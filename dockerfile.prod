@@ -1,0 +1,19 @@
+FROM node:24-alpine as build-web
+WORKDIR /app/web
+COPY web/package*.json ./
+RUN npm install
+COPY web/ ./
+RUN npm run build
+
+FROM node:24-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+COPY --from=build-web /app/web/dist ./web/dist
+
+EXPOSE 3000
+
+CMD sh -c "npx sequelize-cli db:migrate && npm run start"
